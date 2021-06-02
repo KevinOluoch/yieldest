@@ -1,0 +1,27 @@
+Package: yieldest
+Title: Estimate Grain Yield Based on Socio-economic Factors
+Version: 1.0.0.9000
+Authors@R: 
+    person(given = "Kevin",
+           family = "Oluoch",
+           role = c("aut", "cre"),
+           email = "Kevin.o.oluoch@gmail.com",
+           comment = c(ORCID = "0000-0003-1075-0860"))
+Description: 
+    The package contains functions that can be used to prepare , find correlations
+    normalize values, then run a mixed model.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports:
+    dplyr,
+    raster,
+    s2,
+    sf,
+    car,
+    lme4,
+    Hmisc,
+    stats,
+    base
