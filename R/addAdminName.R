@@ -34,10 +34,22 @@ addAdminName <- function(df, longitude = "lon", latitude = "lat",
 
   # Extrating Admin names
   print("Extrating Admin names")
+  starttime <- base::Sys.time()
   adNames <- sapply(1:dim(df)[1], function(x) {
     # Create a geometry object
     df.geometry <- sf::st_point(base::as.matrix(df[x, c(longitude, latitude)]))
-    cat("\r", paste("Extrating Admin name :", x))
+
+    # Update the user on progress
+      # Get remaining time
+    time.remain <- base::difftime(Sys.time(), starttime, units = "secs") * ((dim(df)[1] -  x)/x)
+    min.remain <- base::floor(time.remain/60)
+    sec.remain <- base::floor(time.remain -(min.remain*60))
+      # Show progress and remaining time
+    cat("\r", paste("Extrating Admin names. Progress ",
+                    100*base::round(x/base::dim(df)[1], 2), "%",
+                    ". Approximate remaining time is", min.remain, " minutes  ",
+                    sec.remain, " seconds "
+                    ))
 
     # Return admin name
     as.data.frame(admin.sf[df.geometry, ])[, admin.name]
@@ -61,7 +73,7 @@ addAdminName <- function(df, longitude = "lon", latitude = "lat",
       paste0("Saved file in: ",
              "inst/extdata/MaizeYieldHHdata",
              round(as.numeric(Sys.time())),
-             ".csv"))
+             ".csv", "\n\n"))
 
   # Return the data
   df

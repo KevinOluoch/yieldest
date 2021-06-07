@@ -8,8 +8,8 @@
 #' Given the name of a method an a column, this function will create a warmning
 #'  message stating that the column has not been normalized since it is non-numeric.
 #'
-#' @param method
-#' @param col_
+#' @param method Normalization method
+#' @param col_ Column with the error
 #'
 #' @return NULL
 normalization_warn <- function(method, col_) {
