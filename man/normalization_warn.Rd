@@ -7,7 +7,9 @@
 normalization_warn(method, col_)
 }
 \arguments{
-\item{col_}{}
+\item{method}{Normalization method}
+
+\item{col_}{Column with the error}
 }
 \description{
 Create warning for normalization function
