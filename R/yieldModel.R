@@ -8,14 +8,26 @@
 #' @param df dataframe
 #' @param targetv target variable
 #' @param randomv a character vector of random variables
-#' @param fixedv a character vector of fixedd variables
+#' @param fixedv a character vector of fixed variables. Ignored if
+#'               use.rest.as.fixed is TRUE
+#' @param use.rest.as.fixed boolean: All other variables should be fixed variables
+#'                         default is FALSE (Overrides fixedv)
 #'
 #' @return model object
 #'
 #' @family Yield estimate functions
 #' @export
 #'
-yieldModel <- function(df, targetv, randomv, fixedv) {
+yieldModel <- function(df, targetv, randomv, fixedv=NULL, use.rest.as.fixedv = FALSE) {
+
+  # Override the fixed variables and used all other columns in the dataframe
+  if (use.rest.as.fixedv == TRUE){
+    allcols <- base::names(df)
+    all.cols.rm.target <- allcols[!allcols %in% targetv]
+    all.cols.rm.random <- all.cols.rm.target[!all.cols.rm.target %in% randomv]
+
+    fixedv = all.cols.rm.random
+  }
 
   # Random variables
   # "(1|dd) + (1|ee)"

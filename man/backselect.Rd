@@ -2,16 +2,17 @@
 % Please edit documentation in R/VIFfunctions.R
 \name{backselect}
 \alias{backselect}
-\title{Title}
+\title{Back select Independent variables}
 \usage{
-backselect(df, threshold = 10, trace = T, ...)
+backselect(df, untouched = NULL, threshold = 10, trace = T, ...)
 }
 \arguments{
-\item{df}{dataframe}
+\item{df}{Dataframe with the Independent variables}
 
-\item{threshold}{VIF threshold}
+\item{threshold}{VIF value selection threshold}
 
-\item{trace}{trace}
+\item{trace}{Boolean: wheter the details of each selection step should be
+sent to standard output}
 
 \item{...}{}
 }

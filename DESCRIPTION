@@ -23,5 +23,8 @@ Imports:
     car,
     lme4,
     Hmisc,
+    rsq,
+    effectsize,
     stats,
+    utils,
     base

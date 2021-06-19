@@ -10,7 +10,8 @@ normalization(df, cols, method = "standardization")
 \item{df}{dataframe}
 
 \item{cols}{vector of df columns to be normalized, must be one of
-'standardization', 'centering', 'unit-range', 'clipping' or 'logarithmic'}
+'standardization', 'centering', 'unit-range', 'squares',
+'clipping' or 'logarithmic'}
 
 \item{method}{Normalization method}
 }

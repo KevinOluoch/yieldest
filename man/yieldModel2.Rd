@@ -13,7 +13,8 @@ yieldModel2(df, targetv, randomv, fixedv, use.rest.as.fixed = TRUE)
 
 \item{randomv}{a character vector of random variables}
 
-\item{fixedv}{a character vector of fixedd variables}
+\item{fixedv}{a character vector of fixed variables. Ignored if
+use.rest.as.fixed is TRUE}
 
 \item{use.rest.as.fixed}{boolean: All other variables should be fixed variables
 default is TRUE (Overrides fixedv)}

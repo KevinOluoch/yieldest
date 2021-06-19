@@ -7,7 +7,8 @@
 #' @param df dataframe
 #' @param method Normalization method
 #' @param cols vector of df columns to be normalized, must be one of
-#'     'standardization', 'centering', 'unit-range', 'clipping' or 'logarithmic'
+#'     'standardization', 'centering', 'unit-range', 'squares',
+#'     'clipping' or 'logarithmic'
 #'
 #' @return df with specified columns normalized
 #' @export
@@ -46,6 +47,13 @@ normalization <- function(df, cols, method = "standardization"){
                                                            na.rm = TRUE)))
       }
 
+    } else if(method == "squares"){
+      for (col_ in cols) {
+        # Check if column is numeric
+        if (!is.numeric(df[, col_])) {yieldest::normalization_warn(method, col_); next}
+
+        df[, col_] <- df[, col_] ** 2
+      }
 
     } else if(method == "clipping"){
       print("clipping not implemented ")
@@ -58,7 +66,7 @@ normalization <- function(df, cols, method = "standardization"){
       }
 
     } else{
-    print("method should be one of 'centering', unit-range',
+    print("method should be one of 'centering', unit-range', 'squares',
                  'clipping' or 'logarithmic'")}
 
   df

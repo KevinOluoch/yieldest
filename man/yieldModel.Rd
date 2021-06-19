@@ -4,7 +4,7 @@
 \alias{yieldModel}
 \title{Run yield model}
 \usage{
-yieldModel(df, targetv, randomv, fixedv)
+yieldModel(df, targetv, randomv, fixedv = NULL, use.rest.as.fixedv = FALSE)
 }
 \arguments{
 \item{df}{dataframe}
@@ -13,7 +13,11 @@ yieldModel(df, targetv, randomv, fixedv)
 
 \item{randomv}{a character vector of random variables}
 
-\item{fixedv}{a character vector of fixedd variables}
+\item{fixedv}{a character vector of fixed variables. Ignored if
+use.rest.as.fixed is TRUE}
+
+\item{use.rest.as.fixed}{boolean: All other variables should be fixed variables
+default is FALSE (Overrides fixedv)}
 }
 \value{
 model object

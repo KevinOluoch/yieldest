@@ -18,3 +18,23 @@ normalization_warn <- function(method, col_) {
                         col_, "'. It is non-numeric"))
 
 }
+
+factors_warn1 <- function(refvalue, col_) {
+  # check if column is numeric
+  base::stop(paste0("Number of columns and ref rows should be equal!",
+                   "There are ", base::length(refvalue),
+                   " reference values and ", col_, " columns"))
+
+}
+
+factors_warn2 <- function(refvalue, col_) {
+  # check if column is numeric
+  base::stop(paste0(refvalue, " in not in column ", col_))
+
+}
+
+model_selection.error1 <- function(step.direction) {
+  # Stop if the step direction is not one of: "forward" or "backward"
+  base::stop(paste0('step.direction, must be one of: "forward" or "backward". The current value is :', step.direction))
+
+}
