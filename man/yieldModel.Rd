@@ -2,7 +2,7 @@
 % Please edit documentation in R/yieldModel.R
 \name{yieldModel}
 \alias{yieldModel}
-\title{Run yield model}
+\title{Run mixed effects yield model}
 \usage{
 yieldModel(df, targetv, randomv, fixedv = NULL, use.rest.as.fixedv = FALSE)
 }
@@ -28,9 +28,5 @@ The function creates and runs a yield estimate model.
 \details{
 The function can be used to create a yield estimate model by specifying the
 model variable as either target variable, random variables or fixed variables
-}
-\seealso{
-Other Yield estimate functions: 
-\code{\link{yieldModel2}()}
 }
 \concept{Yield estimate functions}

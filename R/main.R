@@ -120,6 +120,7 @@ main <- function(skipextractnames=TRUE){
 
   data305[, "maize_area_ha"] <- base::sapply(data304[, "maize_area_ha"],
                                              function(x){base::ifelse(x > 1, 0, 1)})
+  data305 <- factorby(df = data305, cols = "maize_area_ha", "0")
 
   # graphics::hist(as.numeric(data305[, "ext_km"]))
   # graphics::hist(as.numeric(data305[, "dismarket_min"]))
@@ -144,8 +145,8 @@ main <- function(skipextractnames=TRUE){
 
   targetV <- "maize_qua_kh"
   randomV <- c("Admin_1", "year", "aez")
-  permanentIV <- c("hybrid", "sex", "mar_stat", "age", "fam_exp", "educ_hoh")
-  temporaryIV <- names(data5)[!names(data5) %in% c(targetV, randomV, permanentIV)]
+  fixedv_1 <- NULL #c("hybrid", "sex", "mar_stat", "age", "fam_exp", "educ_hoh")
+  fixedv_2 <- names(data5)[!names(data5) %in% c(targetV, randomV, fixedv_1)]
 
 
   # print(str(factorby(df = data4, cols = nomCols.binary, rep("0", length(nomCols.binary)))))
@@ -153,9 +154,9 @@ main <- function(skipextractnames=TRUE){
                               df = data5,
                               targetV = targetV,
                               randomV  = randomV,
-                              permanentIV = permanentIV,
-                              temporaryIV = temporaryIV,
-                              trace_=FALSE  )
+                              fixedv_1 = fixedv_1,
+                              fixedv_2 = fixedv_2,
+                              trace_=FALSE )
 
   return(optimalmodel)
   dataZ <- data50

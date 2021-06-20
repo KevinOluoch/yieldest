@@ -1,4 +1,4 @@
-#' Run yield model
+#' Run mixed effects yield model
 #'
 #' The function creates and runs a yield estimate model.
 #'
@@ -41,40 +41,50 @@ yieldModel <- function(df, targetv, randomv, fixedv=NULL, use.rest.as.fixedv = F
   formular.str <- paste( targetv, "~", fixedv.str, "+", randomv.str)
 
 
-  lme4::glmer(stats::as.formula(formular.str), data = df)
-
+  lme4::lmer(stats::as.formula(formular.str), data = df)
 
 }
 
-#' Run yield model
+
+#' Run fixed effects yield model
 #'
-#' wrapper function for yieldModel.
+#' The function creates and runs a fixed effects yield estimate model.
 #'
-#' This function takes in the target variable and the fixed variables and
-#' considers the remaining variables to be fixed variables
+#' The function will create a yield estimate model by specifying the
+#' target variable and fixed variables
 #'
-#'
-#' @inheritParams yieldModel
-#' @param use.rest.as.fixed boolean: All other variables should be fixed variables
+#' @param df dataframe
+#' @param targetv target variable
+#' @param fixedv a character vector of fixed variables. Ignored if
+#'               use.rest.as.fixed is TRUE
+#' @param use.rest.as.fixedvboolean: All other variables should be fixed variables
 #'                         default is TRUE (Overrides fixedv)
 #'
-#' @return model object
 #'
-#' @family Yield estimate functions
+#' @return model object
 #' @export
 #'
-yieldModel2 <- function(df, targetv, randomv, fixedv, use.rest.as.fixed = TRUE) {
+yieldModel_lm <- function(df, targetv, fixedv=NULL, use.rest.as.fixedv = FALSE) {
 
-  if (use.rest.as.fixed == TRUE){
+  # Override the fixed variables and used all other columns in the dataframe
+  if (use.rest.as.fixedv == TRUE){
     allcols <- base::names(df)
     all.cols.rm.target <- allcols[!allcols %in% targetv]
     all.cols.rm.random <- all.cols.rm.target[!all.cols.rm.target %in% randomv]
 
     fixedv = all.cols.rm.random
   }
-  # Call yieldModel
-  # print(all.cols.rm.target)
-  # print(fixedv)
-  yieldModel(df, targetv, randomv, fixedv)
+
+
+  # Fixed variables
+  # "aa + bb + cc"
+  fixedv.str <- paste(fixedv, collapse = " + ")
+
+  # "y ~ aa + bb + cc "
+  formular.str <- paste( targetv, "~", fixedv.str)
+
+
+  stats::lm(stats::as.formula(formular.str), data = df)
+
 
 }
