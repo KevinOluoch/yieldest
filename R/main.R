@@ -3,7 +3,7 @@
 #' Run Analysis
 #'
 #' @export
-main <- function(skipextractnames=TRUE){
+main <- function(skipextractnames=TRUE, skipmodelselection=TRUE){
 
 
 # 1.0 Load data  ----------------------------------------------------------
@@ -98,6 +98,10 @@ main <- function(skipextractnames=TRUE){
                               "maximum_2m_air_temperature_year",
                               "minimum_2m_air_temperature_year",
                               "total_precipitation_year")
+
+  # graphics::hist(data2[, "maize_qua_kh"])
+  # print(base::table(data2[, "maize_qua_kh"]))
+  # print(str(factorby(df = data4, cols = nomCols.binary, rep("0", length(nomCols.binary)))))
   data304 <- yieldest::normalization(data303, cols = nomCols.numeric.normal)
 
   # 3.5 Numeric variables(Heavily skewed distributed): Standardize continous variables by substracting the
@@ -106,11 +110,14 @@ main <- function(skipextractnames=TRUE){
                             "ext_km")
   # Hmisc::hist.data.frame(data2[, nomCols.numeric.skew])
   data305 <- data304
-  data305[, "dismarket_min"] <- cut(data304$dismarket_min,
-                               breaks = c(seq(0, 30, by=5),
-                                          base::max(data304$dismarket_min)),
-                               labels = seq(5, 35, by=5),
-                               include.lowest = TRUE)
+
+  data305[, "dismarket_min"] <- base::sapply(data304[, "dismarket_min"],
+                                             function(x){base::ifelse(x < 30, 0, 1)})
+  # data305[, "dismarket_min"] <- cut(data304$dismarket_min,
+  #                              breaks = c(seq(0, 30, by=5),
+  #                                         base::max(data304$dismarket_min)),
+  #                              labels = seq(5, 35, by=5),
+  #                              include.lowest = TRUE)
 
   data305[, "ext_km"] <- cut(data304[, "ext_km"],
                              breaks = c(0:10,
@@ -119,15 +126,20 @@ main <- function(skipextractnames=TRUE){
                              include.lowest = TRUE)
 
   data305[, "maize_area_ha"] <- base::sapply(data304[, "maize_area_ha"],
-                                             function(x){base::ifelse(x > 1, 0, 1)})
+                                             function(x){base::ifelse(x < 1, 0, 1)})
   data305 <- factorby(df = data305, cols = "maize_area_ha", "0")
 
   # graphics::hist(as.numeric(data305[, "ext_km"]))
   # graphics::hist(as.numeric(data305[, "dismarket_min"]))
   # graphics::hist(as.numeric(data305[, "maize_area_ha"]))
 
+  # 3.6 Normalize the target variable
+  targetv <- "maize_qua_kh"
+  data306 <- yieldest::normalization(data305, targetv)
+  # graphics::hist(data6[, "maize_qua_kh"])
 
-  data3 <- data305
+
+  data3 <- data306
 
 
 # Back select the explanatory variables -----------------------------------
@@ -150,22 +162,41 @@ main <- function(skipextractnames=TRUE){
 
 
   # print(str(factorby(df = data4, cols = nomCols.binary, rep("0", length(nomCols.binary)))))
-  optimalmodel <- model_selection(step.direction = 'forward',
-                              df = data5,
-                              targetV = targetV,
-                              randomV  = randomV,
-                              fixedv_1 = fixedv_1,
-                              fixedv_2 = fixedv_2,
-                              trace_=FALSE )
+  if(!skipmodelselection) {
+    optimalmodel <- model_selection(step.direction = 'forward',
+                                    df = data5,
+                                    targetV = targetV,
+                                    randomV  = randomV,
+                                    fixedv_1 = fixedv_1,
+                                    fixedv_2 = fixedv_2,
+                                    trace_=FALSE )
 
-  return(optimalmodel)
-  dataZ <- data50
+    optimalModelData1 <- optimalmodel
+    usethis::use_data(optimalModelData1, overwrite = TRUE)
+    optimalModelData2 <- optimalmodel
+    usethis::use_data(optimalModelData2, internal = TRUE, overwrite = TRUE)
+    }
+
+
+  if(skipmodelselection) optimalmodel <- optimalModelData2
+
+  # return(optimalmodel)
+
+  data6 <- data5[c(optimalmodel$selectedIV, targetV)]
+
+# Calculate p-values ------------------------------------------------------
+
+  cat("\r", "Calculate p-values ...")
+  # pvalues(df, targetv)
+
+  print(pvalues(data6, targetV))
+  # dataZ <- data6
   # print(str(dataZ))
   # print(head(data2))
-  print(names(dataZ[["output.df"]]))
-  print(names(dataZ[["input.df"]]))
+  # print(names(dataZ[["output.df"]]))
+  # print(names(dataZ[["input.df"]]))
 
-  return(head(dataZ[["output.df"]]))
+  # return(head(dataZ))
 
 # Calculate yield Estimate ------------------------------------------------
 
@@ -173,7 +204,8 @@ main <- function(skipextractnames=TRUE){
   model0 <- yieldest::yieldModel(data5,
                         targetv = "maize_qua_kh",
                         randomv = c("Admin_1", "year", "aez"),
-                        use.rest.as.fixedv = TRUE)
+                        fixedv = optimalmodel$selectedIV
+                        )
   # model0 <- yieldest::yieldModel(data5 ,
   #                      targetv = "maize_pro",
   #                      fixedv = names(data5)[c(4:13, 15:30)], #c("maize_area_ha", "fert_use"),

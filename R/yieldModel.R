@@ -69,10 +69,8 @@ yieldModel_lm <- function(df, targetv, fixedv=NULL, use.rest.as.fixedv = FALSE) 
   # Override the fixed variables and used all other columns in the dataframe
   if (use.rest.as.fixedv == TRUE){
     allcols <- base::names(df)
-    all.cols.rm.target <- allcols[!allcols %in% targetv]
-    all.cols.rm.random <- all.cols.rm.target[!all.cols.rm.target %in% randomv]
 
-    fixedv = all.cols.rm.random
+    fixedv <- allcols[!allcols %in% targetv]
   }
 
 

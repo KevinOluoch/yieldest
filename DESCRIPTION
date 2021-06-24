@@ -28,3 +28,5 @@ Imports:
     stats,
     utils,
     base
+Depends: 
+    R (>= 2.10)
