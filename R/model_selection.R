@@ -8,13 +8,13 @@
 #'
 #' @return Summary linear model with p_values
 #'
-#' @examples
+
 pvalues <- function(df, targetv, fixedv=NULL) {
   # Use all other columns in the dataframe as fixed variables if no fixed
   # variables are provided
-  if (base::is.null(fixedv)){
+  if (is.null(fixedv)){
 
-    allcols <- base::names(df)
+    allcols <- colnames(df)
 
     fixedv <- allcols[!allcols %in% targetv]
   }
@@ -22,11 +22,60 @@ pvalues <- function(df, targetv, fixedv=NULL) {
 
   # Create a linear model
   lm.model <- yieldest::yieldModel_lm(df = df,
-                                   targetv = targetv,
-                                   fixedv = fixedv)
+                                   targetV = targetv,
+                                   fixedV = fixedv)
 
-  summary(lm.model)
+  summary1 <- summary(lm.model)
+
+  summary1$coefficients
+  summary1
 }
+
+
+#' Select a model based on p-values
+#'
+#' random values are not used
+#'
+#' @inheritParams model_selection
+#'
+#' @return Model selected based on the p-value of fixed variables
+#' @export
+model_selection_pvalue <- function(df, targetV, randomV, fixedv=NULL, threshold_ = 0.05){
+
+  selectedfixed <- fixedv
+  if (is.null(fixedv)){
+    allcols <- names(df)
+    selectedfixed <- allcols[!allcols %in% c(targetV, randomV)]
+
+  }
+
+
+  selectedfixed_num <- length(selectedfixed)
+  while(selectedfixed_num > 0){
+    # calculate the coefficients
+    modelcoefs <- pvalues(df, targetV, selectedfixed)
+    # Check if they are all below the threshold(break if true)
+    if(all(modelcoefs[,"Pr(>|t|)"] < threshold_)) break
+
+    # Update the list of selected fixed variables by removing the fixed variable
+    # with highest p-value
+      # Remove intercept row
+    modelcoefs1 <- modelcoefs[!rownames(modelcoefs) %in% "(Intercept)",]
+    # print(modelcoefs)
+      # Update the list of selected fixed variables
+    selectedfixed <-
+      rownames(modelcoefs1[!modelcoefs1[,"Pr(>|t|)"] %in% max(modelcoefs1[,"Pr(>|t|)"]),])
+
+    print(selectedfixed)
+    # return(NULL)
+    # Update the number of remaining variables
+    selectedfixed_num <- length(selectedfixed)
+  }
+
+  list( df = df, fixed.variables = selectedfixed )
+}
+
+
 
 
 
@@ -56,7 +105,8 @@ pvalues <- function(df, targetv, fixedv=NULL) {
 model_selection <- function(step.direction, df, targetV, randomV,
                             fixedv_1 = NULL, fixedv_2 , trace_=FALSE  ) {
 
-
+  #both
+  # seqrep = sequential replacement, combination of forward and backward selections).
 
   # set the reference Independent variables depending on the step.direction
   if(!step.direction %in% c("forward", "backward")) {
@@ -68,6 +118,9 @@ model_selection <- function(step.direction, df, targetV, randomV,
 
   # Backward steps
     if(step.direction == "backward") Num.of.conbinations <- length(fixedv_2):1
+
+    # return(Num.of.conbinations)
+
 
     yieldest:: model_selection_1(df, targetV, randomV,
                                                  fixedv_1, fixedv_2 ,
@@ -84,6 +137,7 @@ model_selection <- function(step.direction, df, targetV, randomV,
 #' each model. The function returns the model with the smallest effectsize.
 #'
 #' @inheritParams yieldModel
+#' @param Num.of.conbinations a vector of order of combinations
 model_selection_1 <- function(df, targetV, randomV, fixedv_1, fixedv_2,
                               Num.of.conbinations, trace_=FALSE  ) {
   selectedAIC <- Inf
@@ -97,9 +151,9 @@ model_selection_1 <- function(df, targetV, randomV, fixedv_1, fixedv_2,
   unselectedIV <- fixedv_2
 
   # Estimate the time it takes
-  no.of.steps <- base::sum(sapply(Num.of.conbinations,
-                                function(x){base::dim(utils::combn(fixedv_2 , x))[2]}))
-  starttime <- base::Sys.time()
+  no.of.steps <- sum(sapply(Num.of.conbinations,
+                                function(x){dim(utils::combn(fixedv_2 , x))[2]}))
+  starttime <- Sys.time()
   k <- 0
 
   # Repeat Forward or backward steps
@@ -107,7 +161,7 @@ model_selection_1 <- function(df, targetV, randomV, fixedv_1, fixedv_2,
     fixedv_2.combinations <- utils::combn(fixedv_2 , i)
     print(i)
 
-    for (j in 1:base::dim(fixedv_2.combinations)[2]) {
+    for (j in 1:dim(fixedv_2.combinations)[2]) {
       k <- k + 1
 
       #c(selectedIV, addonIV)
@@ -115,20 +169,31 @@ model_selection_1 <- function(df, targetV, randomV, fixedv_1, fixedv_2,
       if (trace_ == TRUE) print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 
       current.model <- yieldest::yieldModel(df, targetV, randomV, currentIV)
+      # aa <- current.model
+      # usethis::use_data(aa, overwrite = TRUE)
+      # print(current.model)
 
+      current.model.r2 <- ifelse(is.null(randomV),
+                                 rsq::rsq(current.model),
+                                 rsq::rsq(current.model)[["model"]])
+      R2MnC <- MuMIn::r.squaredGLMM(current.model)
 
-      current.model.r2 <- rsq::rsq(current.model)[["model"]]
+      current.model.R2m <- R2MnC[,"R2m"]
+      current.model.R2c <- R2MnC[,"R2c"]
+
       current.model.AIC <- stats::AIC(current.model)
       current.model.p_value <- stats::coef(current.model)
 
 
 
-      AICofIV <- base::rbind(AICofIV, c(current.model.AIC,
-                                        current.model.r2,
-                                        length(currentIV),
-                                        paste(currentIV,collapse=", ")))
+      AICofIV <- rbind(AICofIV, c(current.model.AIC,
+                                  current.model.r2,
+                                  current.model.R2m,
+                                  current.model.R2c,
+                                  length(currentIV),
+                                  paste(currentIV,collapse=", ")))
 
-      base::colnames(AICofIV) <- c("AIC", "r2", "no.of.fixed.IV", "parameters")
+      colnames(AICofIV) <- c("AIC", "r2", "R2m", "R2c", "no.of.fixed.IV", "parameters")
 
 
       if (trace_ == TRUE) {
@@ -152,21 +217,13 @@ model_selection_1 <- function(df, targetV, randomV, fixedv_1, fixedv_2,
         }
 
       # Update the user on progress
-      # Get remaining time
-      time.remain <- base::difftime(Sys.time(),
-                                    starttime,
-                                    units = "secs") * ((no.of.steps - k)/k)
-      hrs.remain <- base::floor(time.remain/3600)
-      min.remain <- base::floor((time.remain - (hrs.remain*3600))/60)
-      sec.remain <- base::floor(time.remain  - (hrs.remain*3600) -(min.remain*60))
-      # Show progress and remaining time
-      cat("\r", paste("Selecting the optimal model. Progress ",
-                      100*base::round(k/no.of.steps, 4), "%",
-                      ". Approximate remaining time is",
-                      hrs.remain, " Hours  ",
-                      min.remain, " minutes  ",
-                      sec.remain, " seconds "
-      ))
+     if((k %% 100) == 0 | k == no.of.steps){
+       yieldest::progressReport(i = k,
+                                total_i = no.of.steps,
+                                starttime = starttime,
+                                Message_ = "Selecting the optimal model: "
+       )
+     }
 
     }
 

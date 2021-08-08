@@ -4,17 +4,20 @@
 #' using the function fmsb::VIF()and performs operations relating to VIF
 #'
 #' @param df dataframe
+#' @param cols2ignore a vector of column names: colnames not included when
+#'            calculating VIF values.
 #' @param ... other arguments passed to fmsb::VIF()
 #'
 #' @return
 #' @export
-calculateVIF <- function(df, ...){
+calculateVIF <- function(df, targetV = NULL, randomV = NULL, ...){
 
   if(class(df) != 'data.frame') df <- data.frame(df)
 
   #get initial vif value for all comparisons of variables
   vif.values <- NULL
-  df.colnames <- names(df)
+  df.colnames <- base::names(df)
+  df.colnames <- df.colnames[!df.colnames %in% c(targetV, randomV )]
   for(col_ in df.colnames){
 
     regressors <- df.colnames[!df.colnames %in% col_]
@@ -46,7 +49,8 @@ calculateVIF <- function(df, ...){
 #' @return
 #' @export
 #'
-backselect <- function(df, untouched=NULL, threshold = 10, trace = T, ...) {
+backselect <- function(df, targetV, randomV = NULL, untouched=NULL,
+                       threshold = 10, trace = T, ...) {
   df1 <- df
 
   # Leave out "untouched" variables
@@ -57,7 +61,7 @@ backselect <- function(df, untouched=NULL, threshold = 10, trace = T, ...) {
   repeat {
 
     # Calculate VIF values
-    vif.values <- yieldest::calculateVIF(df1)
+    vif.values <- yieldest::calculateVIF(df1, targetV, randomV)
 
     # Get the highest VIF value
     # vif_max<-max(as.numeric(vif_init[,2]), na.rm = TRUE)
@@ -73,6 +77,8 @@ backselect <- function(df, untouched=NULL, threshold = 10, trace = T, ...) {
                   ', max VIF ',round(vif_max,2), sep=''),
             '\n\n')
       }
+
+      vif_remain.col <- vif.values[, "colnames"][!vif.values[, "VIF"] %in% vif_max]
       break
 
     }
@@ -97,8 +103,8 @@ backselect <- function(df, untouched=NULL, threshold = 10, trace = T, ...) {
 
   }
 
-
-  list(input.df = df, output.df = df1, selected.columns = base::names(df1),
+  # print(paste0('vif_remain.col: ', vif_remain.col))
+  list(input.df = df, output.df = df[, c(targetV, randomV, vif_remain.col)], selected.columns = base::names(df1),
        unselected.columns = base::names(df)[!names(df) %in% names(df1)])
 }
 
@@ -120,7 +126,7 @@ backselect <- function(df, untouched=NULL, threshold = 10, trace = T, ...) {
 #' @return a list
 #' @export
 #'
-forwardselect <- function(df, curr.model.cols, cols.to.add, threshold=5, trace=FALSE) {
+forwardselect <- function(df, targetV, randomV = NULL, curr.model.cols, cols.to.add, threshold=5, trace=FALSE) {
   df1 <- df
 
   repeat {
@@ -136,7 +142,7 @@ forwardselect <- function(df, curr.model.cols, cols.to.add, threshold=5, trace=F
         tmp.df1 <- df1[, c(curr.model.cols, col.to.add[i])]
 
         # Calculate VIF values
-        vif.values <- yieldest::calculateVIF(tmp.df1)
+        vif.values <- yieldest::calculateVIF(tmp.df1, targetV, randomV)
         # Return VIF value of the added column
         vif.values[vif.values[, "colnames"] %in% col.to.add[i], ]
       }

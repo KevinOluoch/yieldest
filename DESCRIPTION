@@ -17,6 +17,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports:
     dplyr,
+    rgeos,
     raster,
     s2,
     sf,
@@ -24,9 +25,16 @@ Imports:
     lme4,
     Hmisc,
     rsq,
+    fmsb,
     effectsize,
+    ggplot2,
+    ggsn,
+    ggrepel,
+    cowplot,
+    ggmcmc,
+    reshape2,
+    stringr,
     stats,
     utils,
-    base
 Depends: 
     R (>= 2.10)

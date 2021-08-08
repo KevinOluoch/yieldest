@@ -6,43 +6,54 @@
 #' model variable as either target variable, random variables or fixed variables
 #'
 #' @param df dataframe
-#' @param targetv target variable
-#' @param randomv a character vector of random variables
-#' @param fixedv a character vector of fixed variables. Ignored if
+#' @param targetV target variable
+#' @param randomV a character vector of random variables
+#' @param fixedV a character vector of fixed variables. Ignored if
 #'               use.rest.as.fixed is TRUE
 #' @param use.rest.as.fixed boolean: All other variables should be fixed variables
-#'                         default is FALSE (Overrides fixedv)
+#'                         default is FALSE (Overrides fixedV)
 #'
 #' @return model object
 #'
 #' @family Yield estimate functions
 #' @export
 #'
-yieldModel <- function(df, targetv, randomv, fixedv=NULL, use.rest.as.fixedv = FALSE) {
+yieldModel <- function(df, targetV, randomV, fixedV=NULL, use.rest.as.fixedv = FALSE) {
 
   # Override the fixed variables and used all other columns in the dataframe
   if (use.rest.as.fixedv == TRUE){
     allcols <- base::names(df)
-    all.cols.rm.target <- allcols[!allcols %in% targetv]
-    all.cols.rm.random <- all.cols.rm.target[!all.cols.rm.target %in% randomv]
+    all.cols.rm.target <- allcols[!allcols %in% targetV]
+    all.cols.rm.random <- all.cols.rm.target[!all.cols.rm.target %in% randomV]
 
-    fixedv = all.cols.rm.random
+    fixedV = all.cols.rm.random
   }
 
-  # Random variables
-  # "(1|dd) + (1|ee)"
-  randomv.str <- paste(paste0("(1|", randomv, ")"), collapse = " + ")
-
-  # Fixed variables
-  # "aa + bb + cc"
-  fixedv.str <- paste(fixedv, collapse = " + ")
-
-  # "y ~ aa + bb + cc + (1|dd) + (1|ee)"
-  formular.str <- paste( targetv, "~", fixedv.str, "+", randomv.str)
 
 
-  lme4::lmer(stats::as.formula(formular.str), data = df)
+  if(is.null(randomV)){
 
+    output <- yieldModel_lm(df, targetV=targetV, fixedV=fixedV)
+
+  } else{
+
+    # Random variables
+    # "(1|dd) + (1|ee)"
+    randomV.str <- paste(paste0("(1|", randomV, ")"), collapse = " + ")
+
+
+    # Fixed variables
+    # "aa + bb + cc"
+    fixedV.str <- paste(fixedV, collapse = " + ")
+
+    # "y ~ aa + bb + cc + (1|dd) + (1|ee)"
+    formular.str <- paste( targetV, "~", fixedV.str, "+", randomV.str)
+    # print(formular.str)
+    output <- lme4::lmer(stats::as.formula(formular.str), data = df)
+
+  }
+
+  output
 }
 
 
@@ -54,8 +65,8 @@ yieldModel <- function(df, targetv, randomv, fixedv=NULL, use.rest.as.fixedv = F
 #' target variable and fixed variables
 #'
 #' @param df dataframe
-#' @param targetv target variable
-#' @param fixedv a character vector of fixed variables. Ignored if
+#' @param targetV target variable
+#' @param fixedV a character vector of fixed variables. Ignored if
 #'               use.rest.as.fixed is TRUE
 #' @param use.rest.as.fixedvboolean: All other variables should be fixed variables
 #'                         default is TRUE (Overrides fixedv)
@@ -64,22 +75,22 @@ yieldModel <- function(df, targetv, randomv, fixedv=NULL, use.rest.as.fixedv = F
 #' @return model object
 #' @export
 #'
-yieldModel_lm <- function(df, targetv, fixedv=NULL, use.rest.as.fixedv = FALSE) {
+yieldModel_lm <- function(df, targetV, fixedV=NULL, use.rest.as.fixedv = FALSE) {
 
   # Override the fixed variables and used all other columns in the dataframe
   if (use.rest.as.fixedv == TRUE){
     allcols <- base::names(df)
 
-    fixedv <- allcols[!allcols %in% targetv]
+    fixedV <- allcols[!allcols %in% targetV]
   }
 
 
   # Fixed variables
   # "aa + bb + cc"
-  fixedv.str <- paste(fixedv, collapse = " + ")
+  fixedV.str <- paste(fixedV, collapse = " + ")
 
   # "y ~ aa + bb + cc "
-  formular.str <- paste( targetv, "~", fixedv.str)
+  formular.str <- paste( targetV, "~", fixedV.str)
 
 
   stats::lm(stats::as.formula(formular.str), data = df)
