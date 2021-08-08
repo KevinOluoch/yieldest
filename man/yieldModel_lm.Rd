@@ -4,14 +4,14 @@
 \alias{yieldModel_lm}
 \title{Run fixed effects yield model}
 \usage{
-yieldModel_lm(df, targetv, fixedv = NULL, use.rest.as.fixedv = FALSE)
+yieldModel_lm(df, targetV, fixedV = NULL, use.rest.as.fixedv = FALSE)
 }
 \arguments{
 \item{df}{dataframe}
 
-\item{targetv}{target variable}
+\item{targetV}{target variable}
 
-\item{fixedv}{a character vector of fixed variables. Ignored if
+\item{fixedV}{a character vector of fixed variables. Ignored if
 use.rest.as.fixed is TRUE}
 
 \item{use.rest.as.fixedvboolean:}{All other variables should be fixed variables

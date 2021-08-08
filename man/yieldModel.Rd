@@ -4,20 +4,20 @@
 \alias{yieldModel}
 \title{Run mixed effects yield model}
 \usage{
-yieldModel(df, targetv, randomv, fixedv = NULL, use.rest.as.fixedv = FALSE)
+yieldModel(df, targetV, randomV, fixedV = NULL, use.rest.as.fixedv = FALSE)
 }
 \arguments{
 \item{df}{dataframe}
 
-\item{targetv}{target variable}
+\item{targetV}{target variable}
 
-\item{randomv}{a character vector of random variables}
+\item{randomV}{a character vector of random variables}
 
-\item{fixedv}{a character vector of fixed variables. Ignored if
+\item{fixedV}{a character vector of fixed variables. Ignored if
 use.rest.as.fixed is TRUE}
 
 \item{use.rest.as.fixed}{boolean: All other variables should be fixed variables
-default is FALSE (Overrides fixedv)}
+default is FALSE (Overrides fixedV)}
 }
 \value{
 model object

@@ -16,6 +16,12 @@ model_selection_1(
 }
 \arguments{
 \item{df}{dataframe}
+
+\item{targetV}{target variable}
+
+\item{randomV}{a character vector of random variables}
+
+\item{Num.of.conbinations}{a vector of order of combinations}
 }
 \description{
 Function to select a model by interactively adding or removing the number of

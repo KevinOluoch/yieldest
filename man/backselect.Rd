@@ -4,7 +4,15 @@
 \alias{backselect}
 \title{Back select Independent variables}
 \usage{
-backselect(df, untouched = NULL, threshold = 10, trace = T, ...)
+backselect(
+  df,
+  targetV,
+  randomV = NULL,
+  untouched = NULL,
+  threshold = 10,
+  trace = T,
+  ...
+)
 }
 \arguments{
 \item{df}{Dataframe with the Independent variables}

@@ -4,7 +4,15 @@
 \alias{forwardselect}
 \title{Forward select Independent variables}
 \usage{
-forwardselect(df, curr.model.cols, cols.to.add, threshold = 5, trace = FALSE)
+forwardselect(
+  df,
+  targetV,
+  randomV = NULL,
+  curr.model.cols,
+  cols.to.add,
+  threshold = 5,
+  trace = FALSE
+)
 }
 \arguments{
 \item{df}{Dataframe with the Indipendent variables}
