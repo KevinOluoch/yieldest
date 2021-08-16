@@ -1,4 +1,14 @@
-# Load/Downdload  shapefile
+
+#' # Load/Download  shapefiles from gadm.org
+#'
+#' Downloads in sp format then converts to sf
+#'
+#' @param country Country code
+#' @param level Admin level
+#'
+#' @return Shapefile in sf format
+#' @export
+#'
 admin_sf <- function(country, level = 0) {
   sf::st_as_sf(raster::getData('GADM',
                                country = country,
@@ -119,19 +129,58 @@ plots_N_maps <- function(studyCounties = NULL) {
   data.path <- yieldest::system.file("inst/extdata/MaizeYieldHHdata.csv",
                                      package = "yieldest")
   data1 <- utils::read.csv(data.path, stringsAsFactors = TRUE)
-  # return(table(data1[, "Admin_1"]))
+  tza0.sf <- yieldest::admin_sf(country="TZA", level = 0)
+  uga0.sf <- yieldest::admin_sf(country="UGA", level = 0)
+  ssd0.sf <- yieldest::admin_sf(country="SSD", level = 0)
+  eth0.sf <- yieldest::admin_sf(country="ETH", level = 0)
+  som0.sf <- yieldest::admin_sf(country="SOM", level = 0)
 
-  ken.county <- yieldest::admin_sf(country="KEN", level = 1)
+  ken0.sf <- yieldest::admin_sf(country="KEN", level = 0)
+  ken1.sf <- yieldest::admin_sf(country="KEN", level = 1)
+  ken1.sf <- ken1.sf[order(as.numeric(ken1.sf$CC_1)),]
   studyCounties <- unique(data1[, "Admin_1"])
-  ken.studyCounties <- ken.county[as.data.frame(ken.county)[,"NAME_1"]  %in% studyCounties, ]
+  ken.studyCounties <- ken1.sf[as.data.frame(ken1.sf)[,"NAME_1"]  %in% studyCounties, ]
 
-  # return(head(ken.studyCounties ))
-  # ken.international <- yieldest::admin_sf(country="KEN")
-  # uga.international <- yieldest::admin_sf(country="UGA")
-  # ssd.international <- yieldest::admin_sf(country="SSD")
-  # eth.international <- yieldest::admin_sf(country="ETH")
-  # som.international <- yieldest::admin_sf(country="SOM")
-  # tza.international <- yieldest::admin_sf(country="TZA")
+  # Color labels for counties
+  county_id <- ken1.sf$CC_1
+  stdycounty_id <- ken.studyCounties$CC_1
+  color.label <- rep("black", 47)
+  color.label[county_id %in% stdycounty_id] <- rep("brown", length(stdycounty_id))
+
+
+  # Legend table
+  ken1.df <- data.frame(ken1.sf)
+  rownames(ken1.df) <- NULL
+  ken1.legend.data <- ken1.df[, c("CC_1", "NAME_1")]
+  names(ken1.legend.data) <- c("ID", "County")
+  # Color labels for counties
+  county_id <- ken1.df$CC_1
+  stdycounty_id <- ken.studyCounties$CC_1
+  color.label <- rep("black", 47)
+  color.label[county_id %in% stdycounty_id] <- rep("brown", length(stdycounty_id))
+
+  county_legend.theme1 <-
+    gridExtra::ttheme_default(base_size = 8,
+                              base_colour = "black",
+                              base_family = "",
+                              parse = FALSE,
+                              padding = grid::unit(c(2, 2), "mm"),
+                              core = list(fg_params=list(col=color.label[1:24])))
+  county_legend1 <- gridExtra::tableGrob(ken1.legend.data[1:24,], rows = NULL,
+                                        theme = county_legend.theme1)
+  county_legend.theme2 <-
+    gridExtra::ttheme_default(base_size = 8,
+                              base_colour = "black",
+                              base_family = "",
+                              parse = FALSE,
+                              padding = grid::unit(c(2, 2), "mm"),
+                              core = list(fg_params=list(col=color.label[25:47])))
+  county_legend2 <- gridExtra::tableGrob(ken1.legend.data[25:47,], rows = NULL,
+                                        theme = county_legend.theme2)
+     # Legend object
+  county_legend <- gridExtra::gtable_combine(county_legend1,
+                                             county_legend2,
+                                             along=1)
 
   # Load africa shapefiles
   africaWater <-
@@ -142,7 +191,7 @@ plots_N_maps <- function(studyCounties = NULL) {
 
 
   # Get the map limits
-  area.lim <- sf::st_bbox(ken.county)
+  area.lim <- sf::st_bbox(ken1.sf)
   # print(area.lim)
   min.x <- area.lim["xmin"]
   max.x <- area.lim["xmax"]
@@ -151,7 +200,7 @@ plots_N_maps <- function(studyCounties = NULL) {
 
   map.inset <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = africa, fill= NA, colour="black", size = 0.4, linetype = "solid") +
-    ggplot2::geom_sf(data = ken.county, colour= NA, fill= "ivory1") +
+    ggplot2::geom_sf(data = ken1.sf, colour= NA, fill= "ivory1") +
     ggplot2::geom_rect(mapping = ggplot2::aes(xmin = min.x, xmax = max.x,
                                               ymin = min.y, ymax = max.y,),
                        colour = "red", fill = NA, size = 1) +
@@ -170,16 +219,35 @@ plots_N_maps <- function(studyCounties = NULL) {
   map.main <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = africa, colour= "black", fill= "khaki1",
                      size = 0.4, linetype = "solid") +
+    ggplot2::geom_sf(data = tza0.sf, colour="black", fill= "khaki1", size = 0.8) +
+    ggplot2::geom_sf(data = uga0.sf, colour="black", fill= "khaki1", size = 0.8) +
+    ggplot2::geom_sf(data = ssd0.sf, colour="black", fill= "khaki1", size = 0.8) +
+    ggplot2::geom_sf(data = eth0.sf, colour="black", fill= "khaki1", size = 0.8) +
+    ggplot2::geom_sf(data = som0.sf, colour="black", fill= "khaki1", size = 0.8) +
     # ggplot2::geom_sf(data = africa,
     #                  colour="black", fill= NA,  size = 0.4, linetype = "solid") +
-    ggplot2::geom_sf(data = ken.county, colour= NA, fill= "ivory1") +
+    ggplot2::geom_sf(data = ken1.sf, colour= NA, fill= "ivory1") +
     ggplot2::geom_sf(data = ken.studyCounties, colour= "NA", fill= "ivory2",) +
     ggplot2::geom_sf(data = africaWater, colour=NA, fill= "lightblue") +
 
-    ggplot2::geom_sf(data = ken.county,
+    ggplot2::geom_sf(data = ken1.sf,
                  colour=" light grey", fill= NA,  size = 0.4, linetype = "dashed") +
     ggplot2::geom_sf(data = ken.studyCounties,
                  colour=" dark grey", fill=NA, size = 0.4, linetype = "solid") +
+    ggplot2::geom_sf(data = ken0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_sf(data = tza0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_sf(data = uga0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_sf(data = ssd0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_sf(data = eth0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_sf(data = som0.sf, colour="black", fill=NA, size = 0.8) +
+    ggplot2::geom_label(data = ken1.sf,
+                        mapping = ggplot2::aes(label = CC_1, col = NAME_1,
+                                               geometry = geometry),
+                        stat = "sf_coordinates", size= 2, colour = color.label,
+                        #nudge_x = 0.02, nudge_y = -0.01,
+                        label.size = NA, label.padding = ggplot2::unit(0, "lines"),
+                        label.r = ggplot2::unit(0, "lines"), inherit.aes = FALSE,
+                        fill = "transparent") +
     # ggrepel::geom_label_repel(data = ken.studyCounties,
     #                           mapping = ggplot2::aes(label = NAME_1,
     #                                                  geometry = geometry),
@@ -192,14 +260,11 @@ plots_N_maps <- function(studyCounties = NULL) {
     # ggplot2::geom_sf(data = africa,
     #                  colour="black", fill= NA,  size = 0.4, linetype = "solid") +
 
-    # ggplot2::geom_sf(data = ken.international, colour="black", fill=NA, size = 1.2) +
-    # ggplot2::geom_sf(data = tza.international, colour="black", fill= "khaki1", size = 1.2) +
-    # ggplot2::geom_sf(data = uga.international, colour="black", fill= "khaki1", size = 1.2) +
-    # ggplot2::geom_sf(data = ssd.international, colour="black", fill= "khaki1", size = 1.2) +
-    # ggplot2::geom_sf(data = eth.international, colour="black", fill= "khaki1", size = 1.2) +
-    # ggplot2::geom_sf(data = som.international, colour="black", fill= "khaki1", size = 1.2) +
 
-    ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
+
+  ggplot2::annotation_custom(grob = county_legend, #xmin=42, ymin=-4,
+                             xmax=max.x+12, ymax=max.y) +
+  ggplot2::theme(panel.grid.major = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),
                    panel.border = ggplot2::element_rect(fill = NA,
                                                         size = 0.5,
@@ -224,7 +289,9 @@ plots_N_maps <- function(studyCounties = NULL) {
   # # map.inset
   map.all <- cowplot::ggdraw()+
     cowplot::draw_plot(map.main) +
-    cowplot::draw_plot(map.inset, x = 0.64, y = 0.1, width = 0.2, height = 0.2)
+    cowplot::draw_plot(map.inset, x = 0.63, y = 0.1, width = 0.2, height = 0.2)
 
+  # ggplot2::ggsave(filename = "../inst/extdata/studyCounties.png", plot = map.all,
+  #                 width = 1300, height = 1000, units = "px")
   map.all
 }

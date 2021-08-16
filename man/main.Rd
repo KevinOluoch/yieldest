@@ -4,7 +4,7 @@
 \alias{main}
 \title{The main function}
 \usage{
-main(skipextractnames = TRUE, skipmodelselection = TRUE, topXmodels = 3)
+main(skipmodelselection = TRUE, topXmodels = 3)
 }
 \description{
 Run Analysis

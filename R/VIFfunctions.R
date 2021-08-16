@@ -16,14 +16,24 @@ calculateVIF <- function(df, targetV = NULL, randomV = NULL, ...){
 
   #get initial vif value for all comparisons of variables
   vif.values <- NULL
-  df.colnames <- base::names(df)
+  df.colnames <- names(df)
   df.colnames <- df.colnames[!df.colnames %in% c(targetV, randomV )]
+  df.colnames.factor <-names(Filter(is.factor, df))
+  df.colnames.factor <- df.colnames.factor[!df.colnames.factor %in% c(targetV, randomV )]
+
+  df1 <- df
+  for(col_ in df.colnames.factor){
+    df1[,col_] <- as.integer(df[,col_])
+  }
+
+
+
   for(col_ in df.colnames){
 
     regressors <- df.colnames[!df.colnames %in% col_]
     formula_0 <- paste(regressors, collapse = '+')
     formula_ <- stats::formula(paste(col_, '~', formula_0))
-    vif0 <- fmsb::VIF(stats::lm(formula_, data = df, ...))
+    vif0 <- fmsb::VIF(stats::lm(formula_, data = df1, ...))
 
     vif.values <-rbind(vif.values, c(col_, as.numeric(vif0)))
     }
@@ -78,7 +88,7 @@ backselect <- function(df, targetV, randomV = NULL, untouched=NULL,
             '\n\n')
       }
 
-      vif_remain.col <- vif.values[, "colnames"][!vif.values[, "VIF"] %in% vif_max]
+      # vif_remain.col <- vif.values[, "colnames"][!vif.values[, "VIF"] %in% vif_max]
       break
 
     }

@@ -2,6 +2,7 @@
 
 export(DailytoYearyAve)
 export(addAdminName)
+export(admin_sf)
 export(backselect)
 export(calculateVIF)
 export(dropCol)
