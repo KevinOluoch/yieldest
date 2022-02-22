@@ -3,224 +3,160 @@
 #' Run Analysis
 #'
 #' @export
-main <- function(skipextractnames=TRUE, skipmodelselection=TRUE){
+main <- function( skipmodelselection=TRUE, topXmodels = 3, df.main = NULL){
 
 
-# 1.0 Load data  ----------------------------------------------------------
+  # 1.0 Load data  ----------------------------------------------------------
 
-  # 1.1 Option 1: Load data without admin column
-
-  if (!skipextractnames){
-
-  data.path0 <- yieldest::system.file("inst/extdata/MaizeYieldHouseHolddata.csv",
+  data.path <- yieldest::system.file("inst/extdata/FarmersHHdata.csv",
                                      package = "yieldest")
-  data001 <- utils::read.csv(data.path0, stringsAsFactors = TRUE)
-  data002 <- data001[!data001[, "educ_hoh"] %in% 71,]
+  data1 <- utils::read.csv(data.path, stringsAsFactors = TRUE)
 
-  cat("\r", "Adding Admin name ...")
-  print("data002")
-  print(data002)
-  data0 <- yieldest::addAdminName(data002) #Inefficient
+  # Identify the target variable
+  targetV <- "maize_qua_kh"
+  randomV <- c("Admin_1", "aez", "year")
 
-  # remove outlier in educ_hoh
-
-  nomCols.outlier <- c("educ_hoh")
-  # data405 <- yieldest::normalization(data404, cols = nomCols.outlier)
-  # print(head(data404))
-  # print(str(factorby(df = data404, cols = nomCols.outlier, rep("0", length(nomCols.outlier)))))
-  # return(unique(data404$educ_hoh))
-  # data405 <- data404
+# return(list("a" = data1, "b" = data12[colnames(data12) %in% c(colnames(data1),
+#                                                               c("Admin_1", "year", "aez"))]))
 
 
-
-  data1 <- data0
-
-  }
-
-
-  # 1.2 Option 2: Load data with admin column
-
-  if (skipextractnames){
-    # SKIPPED: data already has Admin data
-    data.path <- yieldest::system.file("inst/extdata/MaizeYieldHHdata.csv",
-                                       package = "yieldest")
-    data1 <- utils::read.csv(data.path, stringsAsFactors = TRUE)
-  }
-
-
-# 2.0 Remove unused columns -----------------------------------------------
-
-  cat("\r", "Removing unused columns ...")
-
-  # 2.1 target associated columns and identification columns
-  ta_variables <- c("overall_match", "farm_income", "total_income", #"fam_exp",
-                    "maize_area_ha_sw","overall_match", "identification",
-                    "match_pr_anh", "keep_hh", "ad_equ_oecd_mod",
-                    "fert_qua_sw", "fert_qua_sw_kh", "maize_pro_sw",
-                    "maize_qua_sw_kh", "maize_pro", "mysample", "fert_qua",
-                    "fert_qua_kh", "HFIA", "HFIAS", "Qair_f_inst_mean_year")
-
-  id.variables <- c( "X", "hhid", "hhid_2010",  "lat", "lon" )
-  data201 <- yieldest::dropCol( data1, c(id.variables, ta_variables) )
-
-
-  # 2.2 Remove Columns with NA Values
-  data202 <- yieldest::dropNaCol(data201)
-
-  data2 <- data202
-
-
-# 3.0 Normalize data  -----------------------------------------------------
+  # 2.0 Normalize data  -----------------------------------------------------
 
   cat("\r","Normalizing data ...")
-
-  # 3.1 Random variables: Make the random variables factors (Dummy variables)
-  random.variables <- c("Admin_1", "aez", "year")
-  data301 <- factorby(df = data2, cols = random.variables,
-                      c("Mombasa", "Coastal Lowland", 2010))
-
+  data200 <- data1
 
   # 3.2 Binary data: Make the Binary variables factors (Dummy variables) with
   #     zero as the reerence value
-  nomCols.binary <- c("hybrid", "sex", "credit_acc_hh_sc", "acc_ext",
-                      "fert_use", "acc_ext_past", "school")
-  data302 <- factorby(df = data301, cols = nomCols.binary, rep("0", length(nomCols.binary)))
+  nomCols.binary <- c("hybrid", "sex", "credit_acc", "acc_ext",
+                      "fert_use", "acc_ext_past")
+
+  data202 <- yieldest::factorby(df = data200, cols = nomCols.binary, rep("0", length(nomCols.binary)))
 
 
   # 3.3 Nominal variables: Make the Nominal variables factors (Dummy variables)
   # with the mode value as the reference value
   nomCols.nominal <- c("mar_stat")
-  data303 <- factorby_occur(df = data302, cols = nomCols.nominal)
+  data203 <- yieldest::factorby_occur(df = data202, cols = nomCols.nominal)
+
+
 
   # 3.4 Numeric variables(Normally distributed): Standardize continous variables by substracting the
   #     mean and dividing by the standard deviation
-  nomCols.numeric.normal <- c("age","fam_exp", "educ_hoh", "hh_size",
-                              "maximum_2m_air_temperature_year",
-                              "minimum_2m_air_temperature_year",
-                              "total_precipitation_year")
+  data2040 <- data203
+  nomCols.numeric.normal <- c("age","fam_exp", "educ_yrs", "hh_size",
+                              "max_2m_air_temp_yr",
+                              #"min_2m_air_temp_yr",
+                              "precipitation_yr")
 
   # graphics::hist(data2[, "maize_qua_kh"])
-  # print(base::table(data2[, "maize_qua_kh"]))
-  # print(str(factorby(df = data4, cols = nomCols.binary, rep("0", length(nomCols.binary)))))
-  data304 <- yieldest::normalization(data303, cols = nomCols.numeric.normal)
 
-  # 3.5 Numeric variables(Heavily skewed distributed): Standardize continous variables by substracting the
-  #     mean and dividing by the standard deviation
-  nomCols.numeric.skew <- c("maize_area_ha", "dismarket_min",
+
+  # Square the weather variables before nomali ations
+  nomCols.numeric.normal.weather <- c("max_2m_air_temp_yr",
+                                      #"min_2m_air_temp_yr",
+                                      "precipitation_yr")
+
+  # Add squared the weather variables
+  nomCols.numeric.normal.weather_sqrd <- paste0(nomCols.numeric.normal.weather,
+                                                "_sqrd")
+  data2040[,nomCols.numeric.normal.weather_sqrd] <- data2040[, nomCols.numeric.normal.weather]
+
+  # Square terms
+  data2041<- yieldest::normalization(data2040,
+                                     cols = nomCols.numeric.normal.weather_sqrd,
+                                     method = "squares")
+
+  # print(str(data3041))
+  # Normalize squared and linear terms
+  data204 <- yieldest::normalization(data2041, group = TRUE, groupby = "aez",
+                                     cols = c(nomCols.numeric.normal,
+                                              nomCols.numeric.normal.weather_sqrd))
+
+
+  # 3.5 Numeric variables(Heavily skewed distributed): Standardize continuous
+  # variables by subtracting the mean and dividing by the standard deviation
+  nomCols.numeric.skew <- c("maize_area_ha", "dis_market_min",
                             "ext_km")
-  # Hmisc::hist.data.frame(data2[, nomCols.numeric.skew])
-  data305 <- data304
 
-  data305[, "dismarket_min"] <- base::sapply(data304[, "dismarket_min"],
-                                             function(x){base::ifelse(x < 30, 0, 1)})
-  # data305[, "dismarket_min"] <- cut(data304$dismarket_min,
-  #                              breaks = c(seq(0, 30, by=5),
-  #                                         base::max(data304$dismarket_min)),
-  #                              labels = seq(5, 35, by=5),
-  #                              include.lowest = TRUE)
+  data205 <- data204
 
-  data305[, "ext_km"] <- cut(data304[, "ext_km"],
-                             breaks = c(0:10,
-                                        max(data304[, "ext_km"])),
-                             labels = 1:11,
-                             include.lowest = TRUE)
+  data205 <- yieldest::normalization(data204, nomCols.numeric.skew)
 
-  data305[, "maize_area_ha"] <- base::sapply(data304[, "maize_area_ha"],
-                                             function(x){base::ifelse(x < 1, 0, 1)})
-  data305 <- factorby(df = data305, cols = "maize_area_ha", "0")
-
-  # graphics::hist(as.numeric(data305[, "ext_km"]))
-  # graphics::hist(as.numeric(data305[, "dismarket_min"]))
-  # graphics::hist(as.numeric(data305[, "maize_area_ha"]))
 
   # 3.6 Normalize the target variable
-  targetv <- "maize_qua_kh"
-  data306 <- yieldest::normalization(data305, targetv)
-  # graphics::hist(data6[, "maize_qua_kh"])
-
-
-  data3 <- data306
-
-
-# Back select the explanatory variables -----------------------------------
-
-  # Check for colinearity
-  cat("\r", "Calculate VIF 1 ...")
-  data50 <- yieldest::backselect(data3, threshold = 5, trace = F) #data501)
-  # return(data50)
-  data5 <- data50[["output.df"]]
-
-
-# Select a model ----------------------------------------------------------
-
-  cat("\r", "Find the most optimal model ...")
-
   targetV <- "maize_qua_kh"
-  randomV <- c("Admin_1", "year", "aez")
-  fixedv_1 <- NULL #c("hybrid", "sex", "mar_stat", "age", "fam_exp", "educ_hoh")
-  fixedv_2 <- names(data5)[!names(data5) %in% c(targetV, randomV, fixedv_1)]
+  data206 <- yieldest::normalization(data205, targetV)
+
+  data2 <-  data206 # data305 #
 
 
-  # print(str(factorby(df = data4, cols = nomCols.binary, rep("0", length(nomCols.binary)))))
-  if(!skipmodelselection) {
-    optimalmodel <- model_selection(step.direction = 'forward',
-                                    df = data5,
-                                    targetV = targetV,
-                                    randomV  = randomV,
-                                    fixedv_1 = fixedv_1,
-                                    fixedv_2 = fixedv_2,
-                                    trace_=FALSE )
 
-    optimalModelData1 <- optimalmodel
-    usethis::use_data(optimalModelData1, overwrite = TRUE)
-    optimalModelData2 <- optimalmodel
-    usethis::use_data(optimalModelData2, internal = TRUE, overwrite = TRUE)
+# 3.0 Rename variables ----------------------------------
+
+  cat("\r", "Rename variables ...")
+
+
+# 4.0 Use VIF to check Collinearity ---------------------------------------
+
+
+  # Selection based on VIF
+  cat("\r", "Calculate VIF 1 ...")
+  data40 <- data2
+
+  #Organize the columns
+  list41 <- organizedf(data40)
+  data42 <- list41[["outputdf"]]
+
+  # Leave out the squared terms when calculating VIF
+  sqrd_terms <- c("max_2m_air_temp_yr"="max_2m_air_temp_yr_sqrd",
+                  #"mnT" = "mnT2",
+                  "precipitation_yr" = "precipitation_yr_sqrd")
+
+  data43 <- data42[,!names(data42) %in% sqrd_terms]
+
+
+  list44 <- yieldest::backselectVIF(data43, targetV, randomV,
+                                 threshold = 5, trace = F)
+
+  # if (!is.null(df.main)){
+  #
+  #   list64 <- yieldest::backselect(data43, targetV, randomV,
+  #                                  threshold = 10, trace = F)
+  # }
+  data45 <- list44[["output.df"]]
+  data46 <- data45
+
+  # Return squared terms if the linear terms are still there
+  for (linear_name in names(sqrd_terms)){
+    if (linear_name %in% names(data45)){
+      data46[sqrd_terms[linear_name]] <- data40[sqrd_terms[linear_name]]
     }
+  }
+
+  data4 <- data46
 
 
-  if(skipmodelselection) optimalmodel <- optimalModelData2
 
-  # return(optimalmodel)
-
-  data6 <- data5[c(optimalmodel$selectedIV, targetV)]
-
-# Calculate p-values ------------------------------------------------------
-
-  cat("\r", "Calculate p-values ...")
-  # pvalues(df, targetv)
-
-  print(pvalues(data6, targetV))
-  # dataZ <- data6
-  # print(str(dataZ))
-  # print(head(data2))
-  # print(names(dataZ[["output.df"]]))
-  # print(names(dataZ[["input.df"]]))
-
-  # return(head(dataZ))
-
-# Calculate yield Estimate ------------------------------------------------
+# 5.0 Fixed- Effects Model Calculate Yield Estimate -----------------------
 
   cat("\r", "Calculate yield Estimate ...")
-  model0 <- yieldest::yieldModel(data5,
-                        targetv = "maize_qua_kh",
-                        randomv = c("Admin_1", "year", "aez"),
-                        fixedv = optimalmodel$selectedIV
-                        )
-  # model0 <- yieldest::yieldModel(data5 ,
-  #                      targetv = "maize_pro",
-  #                      fixedv = names(data5)[c(4:13, 15:30)], #c("maize_area_ha", "fert_use"),
-  #                      randomv = c("Admin_1", "aez", "year"))
-  #                      # randomv = c("aez", "year"))
+  data50 <- data4
+  list51 <- yieldest::organizedf(data50)
+  data52 <- list51[["outputdf"]]
+
+  fxdEffMdl <-
+    yieldest::fixedEffetsModel(df=data52[,colnames(data52)[!colnames(data52) %in% randomV]],
+                                          targetv = targetV)
 
 
 
 
-# Return Model ------------------------------------------------------------
-  cat("\r", "Return Model and the data used", "\n\n")
-  list("modeldata" = data5, "vif"=data50[["VIF"]], "model" = model0)
+# 6.0 Return model --------------------------------------------------------
+  cat("\r", "Complete: Returned Model, ")
 
-
+  list("Model" = fxdEffMdl, "summary" = summary(fxdEffMdl))
 
 }
+
 
 

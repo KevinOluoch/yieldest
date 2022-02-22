@@ -4,7 +4,13 @@
 \alias{normalization}
 \title{normalization}
 \usage{
-normalization(df, cols, method = "standardization")
+normalization(
+  df,
+  cols,
+  method = "standardization",
+  group = FALSE,
+  groupby = "aez"
+)
 }
 \arguments{
 \item{df}{dataframe}
@@ -14,6 +20,10 @@ normalization(df, cols, method = "standardization")
 'clipping' or 'logarithmic'}
 
 \item{method}{Normalization method}
+
+\item{group}{Logical: whether to normalize in groups (Works only with standardization)}
+
+\item{groupby}{Column to be used to group. Ignored if group is false}
 }
 \value{
 df with specified columns normalized

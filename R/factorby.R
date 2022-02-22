@@ -11,14 +11,14 @@
 #'
 factorby <- function(df, cols, refvalues) {
   # Number of columns and ref rows should be equal
-  if (base::length(cols) != base::length(refvalues)) factors_warn1(refvalues, cols)
+  if (base::length(cols) != base::length(refvalues)) yieldest::factors_warn1(refvalues, cols)
 
   for (i in 1:length(cols)) {
     col_ <- cols[i]
     refvalue <- refvalues[i]
 
     uniquevalues <- base::unique(df[, col_])
-    if (!refvalue %in% uniquevalues) factors_warn2(refvalues, col_)
+    if (!refvalue %in% uniquevalues) yieldest::factors_warn2(refvalues, col_)
 
     # convert to levels
     df[, col_] <- base::as.factor(df[, col_])

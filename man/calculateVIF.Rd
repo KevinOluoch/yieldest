@@ -4,12 +4,15 @@
 \alias{calculateVIF}
 \title{VIF functions}
 \usage{
-calculateVIF(df, ...)
+calculateVIF(df, targetV = NULL, randomV = NULL, ...)
 }
 \arguments{
 \item{df}{dataframe}
 
 \item{...}{other arguments passed to fmsb::VIF()}
+
+\item{cols2ignore}{a vector of column names: colnames not included when
+calculating VIF values.}
 }
 \value{
 

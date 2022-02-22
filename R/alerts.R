@@ -1,6 +1,5 @@
 
 
-
 #' Alerts to the user
 #'
 #' Create warning for normalization function
@@ -33,8 +32,4 @@ factors_warn2 <- function(refvalue, col_) {
 
 }
 
-model_selection.error1 <- function(step.direction) {
-  # Stop if the step direction is not one of: "forward" or "backward"
-  base::stop(paste0('step.direction, must be one of: "forward" or "backward". The current value is :', step.direction))
 
-}

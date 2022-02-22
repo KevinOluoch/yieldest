@@ -16,17 +16,8 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports:
-    dplyr,
-    raster,
-    s2,
-    sf,
-    car,
-    lme4,
-    Hmisc,
-    rsq,
-    effectsize,
     stats,
     utils,
-    base
+    fmsb 
 Depends: 
     R (>= 2.10)

@@ -9,11 +9,13 @@
 #' @param cols vector of df columns to be normalized, must be one of
 #'     'standardization', 'centering', 'unit-range', 'squares',
 #'     'clipping' or 'logarithmic'
+#' @param group Logical: whether to normalize in groups (Works only with standardization)
+#' @param groupby Column to be used to group. Ignored if group is false
 #'
 #' @return df with specified columns normalized
 #' @export
 
-normalization <- function(df, cols, method = "standardization"){
+normalization <- function(df, cols, method = "standardization", group = FALSE, groupby = "aez"){
 
 
 
@@ -23,6 +25,18 @@ normalization <- function(df, cols, method = "standardization"){
     for (col_ in cols) {
       # Check if column is numeric
       if (!is.numeric(df[, col_])) {yieldest::normalization_warn(method, col_); next}
+
+      # Standardize by region/groups
+      if(group == TRUE){
+        aezs <- unique(df[, groupby])
+        for (aez in aezs) {
+          select.rows <- aezs %in% aez
+          df[select.rows, col_] <-
+            ((df[select.rows, col_] - base::mean(df[select.rows, col_], na.rm = TRUE))/
+                           stats::sd(df[select.rows, col_], na.rm = TRUE))
+          next
+        }
+      }
 
       df[, col_] <- ((df[, col_] - base::mean(df[, col_], na.rm = TRUE))/
                        stats::sd(df[, col_], na.rm = TRUE))
